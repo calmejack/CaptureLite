@@ -12,6 +12,14 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
         var texCoord: SIMD2<Float>
     }
 
+    struct RendererStats: Sendable {
+        var fps: Double
+        var resolution: String
+        var pixelFormat: String
+        var droppedFrames: Int
+        var renderTimeMS: Double
+    }
+
     private let device: MTLDevice
     private let commandQueue: MTLCommandQueue
     private var textureCache: CVMetalTextureCache?
@@ -24,6 +32,13 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
     private var _aspectMode: AspectMode = .fit
     private var _mirror: Bool = false
     private var _rotation: Rotation = .zero
+
+    private var _frameCount: Int = 0
+    private var _sampleStart: CFAbsoluteTime = 0
+    private var _fps: Double = 0
+    private var _droppedFrames: Int = 0
+    private var _pendingDrawn = false
+    private var _lastRenderTimeMS: Double = 0
 
     var aspectMode: AspectMode {
         get { lock.lock(); defer { lock.unlock() }; return _aspectMode }
@@ -85,7 +100,12 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
 
     func enqueue(_ frame: VideoFrame) {
         lock.lock()
+        if _pendingDrawn {
+            _droppedFrames += 1
+        }
+        _pendingDrawn = true
         _latestFrame = frame
+        _frameCount += 1
         lock.unlock()
     }
 
@@ -95,9 +115,42 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
         return _latestFrame
     }
 
+    func stats() -> RendererStats {
+        lock.lock()
+        defer { lock.unlock() }
+        let now = CFAbsoluteTimeGetCurrent()
+        let elapsed = now - _sampleStart
+        if elapsed >= 1 {
+            _fps = Double(_frameCount) / elapsed
+            _frameCount = 0
+            _sampleStart = now
+        }
+        let frame = _latestFrame
+        let pixelFormat = Self.pixelFormatName(frame?.pixelFormat)
+        return RendererStats(
+            fps: _fps,
+            resolution: frame.map { "\($0.width) × \($0.height)" } ?? "—",
+            pixelFormat: pixelFormat,
+            droppedFrames: _droppedFrames,
+            renderTimeMS: _lastRenderTimeMS
+        )
+    }
+
+    private static func pixelFormatName(_ format: OSType?) -> String {
+        guard let format else { return "—" }
+        switch format {
+        case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange: return "NV12"
+        case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange: return "NV12 (video)"
+        case kCVPixelFormatType_32BGRA: return "BGRA"
+        case kCVPixelFormatType_32ARGB: return "ARGB"
+        default: return String(format: "%08X", format)
+        }
+    }
+
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
     func draw(in view: MTKView) {
+        let start = CFAbsoluteTimeGetCurrent()
         lock.lock()
         let frame = _latestFrame
         let aspect = _aspectMode
@@ -111,6 +164,10 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
               let commandBuffer = commandQueue.makeCommandBuffer(),
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor)
         else { return }
+
+        lock.lock()
+        _pendingDrawn = false
+        lock.unlock()
 
         let drawableSize = view.drawableSize
 
@@ -146,6 +203,11 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
 
         commandBuffer.present(drawable)
         commandBuffer.commit()
+
+        let renderTime = (CFAbsoluteTimeGetCurrent() - start) * 1000
+        lock.lock()
+        _lastRenderTimeMS = renderTime
+        lock.unlock()
     }
 
     func snapshotPNGData() -> Data? {

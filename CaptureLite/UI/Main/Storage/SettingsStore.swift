@@ -47,6 +47,10 @@ final class SettingsStore {
         didSet { defaults.set(recordingCodec.rawValue, forKey: Keys.recordingCodec) }
     }
 
+    var recordingQuality: RecordingQuality = .high {
+        didSet { defaults.set(recordingQuality.rawValue, forKey: Keys.recordingQuality) }
+    }
+
     var recordingDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Movies/CaptureLite", isDirectory: true) {
         didSet { defaults.set(recordingDirectory.path, forKey: Keys.recordingDirectory) }
@@ -67,6 +71,7 @@ final class SettingsStore {
         preferredResolution = defaults.string(forKey: Keys.preferredResolution)
         preferredFPS = defaults.object(forKey: Keys.preferredFPS) as? Double
         recordingCodec = VideoCodec(rawValue: defaults.string(forKey: Keys.recordingCodec) ?? "") ?? .h264
+        recordingQuality = RecordingQuality(rawValue: defaults.string(forKey: Keys.recordingQuality) ?? "") ?? .high
         if let path = defaults.string(forKey: Keys.recordingDirectory) {
             recordingDirectory = URL(fileURLWithPath: path, isDirectory: true)
         }
@@ -85,6 +90,7 @@ final class SettingsStore {
         static let preferredResolution = "preferredResolution"
         static let preferredFPS = "preferredFPS"
         static let recordingCodec = "recordingCodec"
+        static let recordingQuality = "recordingQuality"
         static let recordingDirectory = "recordingDirectory"
         static let screenshotDirectory = "screenshotDirectory"
     }

@@ -23,6 +23,35 @@ struct RecordingConfig: Sendable {
     var outputURL: URL
 }
 
+enum RecordingQuality: String, CaseIterable, Sendable, Identifiable {
+    case high
+    case medium
+    case low
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .high: return "高"
+        case .medium: return "中"
+        case .low: return "低"
+        }
+    }
+
+    var bitrateMultiplier: Double {
+        switch self {
+        case .high: return 0.14
+        case .medium: return 0.10
+        case .low: return 0.06
+        }
+    }
+
+    func bitrate(width: Int, height: Int, fps: Double) -> Int {
+        let raw = Double(width) * Double(height) * fps * bitrateMultiplier
+        return max(500_000, Int(raw))
+    }
+}
+
 struct AudioRecordingSettings: Sendable {
     let sampleRate: Double
     let channelCount: Int

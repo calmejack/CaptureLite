@@ -13,6 +13,18 @@ struct PreviewView: View {
             if state.currentVideoDevice == nil {
                 emptyState
             }
+            #if DEBUG
+            if let renderer {
+                VStack {
+                    Spacer()
+                    HStack {
+                        DebugOverlayView(renderer: renderer)
+                        Spacer()
+                    }
+                }
+                .padding(8)
+            }
+            #endif
         }
     }
 

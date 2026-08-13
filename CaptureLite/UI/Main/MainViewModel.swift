@@ -173,7 +173,7 @@ final class MainViewModel {
             width: format.width,
             height: format.height,
             fps: format.fps,
-            bitrate: nil,
+            bitrate: environment.settings.recordingQuality.bitrate(width: format.width, height: format.height, fps: format.fps),
             outputURL: recordingURL()
         )
 

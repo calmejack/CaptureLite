@@ -15,6 +15,15 @@ final class CaptureLiteTests: XCTestCase {
         XCTAssertEqual(config.width, 1920)
         XCTAssertEqual(config.codec, .h264)
     }
+
+    func testRecordingQualityBitrateOrdering() {
+        let high = RecordingQuality.high.bitrate(width: 1920, height: 1080, fps: 60)
+        let medium = RecordingQuality.medium.bitrate(width: 1920, height: 1080, fps: 60)
+        let low = RecordingQuality.low.bitrate(width: 1920, height: 1080, fps: 60)
+        XCTAssertGreaterThan(high, medium)
+        XCTAssertGreaterThan(medium, low)
+        XCTAssertGreaterThanOrEqual(low, 500_000)
+    }
 }
 
 final class AspectTransformTests: XCTestCase {
@@ -125,6 +134,7 @@ final class SettingsStoreTests: XCTestCase {
         store.preferredResolution = "1920x1080"
         store.preferredFPS = 60
         store.recordingCodec = .hevc
+        store.recordingQuality = .low
 
         let reloaded = SettingsStore(defaults: defaults)
         XCTAssertEqual(reloaded.lastVideoDeviceID, "ABC-123")
@@ -136,6 +146,7 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.preferredResolution, "1920x1080")
         XCTAssertEqual(reloaded.preferredFPS, 60)
         XCTAssertEqual(reloaded.recordingCodec, .hevc)
+        XCTAssertEqual(reloaded.recordingQuality, .low)
 
         defaults.removePersistentDomain(forName: suiteName)
     }
@@ -151,6 +162,7 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertFalse(store.mirror)
         XCTAssertNil(store.preferredResolution)
         XCTAssertEqual(store.recordingCodec, .h264)
+        XCTAssertEqual(store.recordingQuality, .high)
         XCTAssertEqual(store.recordingDirectory.lastPathComponent, "CaptureLite")
         XCTAssertEqual(store.screenshotDirectory.lastPathComponent, "CaptureLite")
     }
