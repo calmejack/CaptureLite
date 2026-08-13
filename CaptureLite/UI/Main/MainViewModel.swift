@@ -207,7 +207,7 @@ final class MainViewModel {
         }
     }
 
-    private func stopRecording() async {
+    func stopRecording() async {
         state.recordingState = .stopping
         stopElapsedTimer()
         environment.audioEngine.onAudioFrame = nil
@@ -221,10 +221,7 @@ final class MainViewModel {
     private func recordingURL() -> URL {
         let directory = environment.settings.recordingDirectory
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        let filename = "CaptureLite_\(formatter.string(from: Date())).mp4"
-        return directory.appendingPathComponent(filename)
+        return directory.appendingPathComponent(RecordingFilename.make())
     }
 
     private var elapsedTask: Task<Void, Never>?

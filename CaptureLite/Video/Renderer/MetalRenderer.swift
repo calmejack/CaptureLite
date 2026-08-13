@@ -7,7 +7,7 @@ import ImageIO
 import Foundation
 
 final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked Sendable {
-    private struct Vertex {
+    struct Vertex {
         var position: SIMD2<Float>
         var texCoord: SIMD2<Float>
     }
@@ -284,7 +284,7 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
         }
     }
 
-    private static func makeVertices(
+    static func makeVertices(
         frameWidth: Int,
         frameHeight: Int,
         drawableWidth: Int,

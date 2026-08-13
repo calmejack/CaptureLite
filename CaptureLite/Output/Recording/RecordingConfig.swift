@@ -27,3 +27,12 @@ struct AudioRecordingSettings: Sendable {
     let sampleRate: Double
     let channelCount: Int
 }
+
+enum RecordingFilename {
+    static func make(date: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        return "CaptureLite_\(formatter.string(from: date)).mp4"
+    }
+}

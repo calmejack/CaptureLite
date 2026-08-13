@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct CaptureLiteApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     @State private var environment: AppEnvironment
     @State private var state: AppState
     @State private var viewModel: MainViewModel
@@ -13,6 +15,7 @@ struct CaptureLiteApp: App {
         _environment = State(initialValue: env)
         _state = State(initialValue: appState)
         _viewModel = State(initialValue: vm)
+        appDelegate.configure(viewModel: vm)
     }
 
     var body: some Scene {
