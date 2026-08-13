@@ -1,0 +1,62 @@
+name: CaptureLite
+options:
+  bundleIdPrefix: com.capturelite
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  CaptureLite:
+    type: application
+    platform: macOS
+    sources:
+      - path: CaptureLite
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.capturelite.CaptureLite
+        PRODUCT_NAME: CaptureLite
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: CaptureLite/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_PREVIEWS: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+    entitlements:
+      path: CaptureLite/Resources/CaptureLite.entitlements
+      properties:
+        com.apple.security.device.camera: true
+        com.apple.security.device.audio-input: true
+
+  CaptureLiteTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: CaptureLiteTests
+    dependencies:
+      - target: CaptureLite
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.capturelite.CaptureLiteTests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  CaptureLite:
+    build:
+      targets:
+        CaptureLite: all
+        CaptureLiteTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CaptureLiteTests
