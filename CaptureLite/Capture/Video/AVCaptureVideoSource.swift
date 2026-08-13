@@ -90,18 +90,45 @@ final class AVCaptureVideoSource: NSObject, VideoSource, @unchecked Sendable {
             return Int(dims.width) == width && Int(dims.height) == height
         }
 
-        guard let format = candidates.first(where: { f in
-            f.videoSupportedFrameRateRanges.contains { $0.maxFrameRate >= fps }
+        guard let format = candidates.first(where: { format in
+            format.videoSupportedFrameRateRanges.contains { Self.supports($0, fps: fps) }
         }) else {
+            Logger.error("applyFormat: no format supports \(width)x\(height)@\(fps)", category: .capture)
             throw FormatError.unsupportedFormat
         }
 
-        let duration = CMTime(value: 100, timescale: CMTimeScale(fps * 100))
+        guard let range = format.videoSupportedFrameRateRanges.first(where: { Self.supports($0, fps: fps) }) else {
+            throw FormatError.unsupportedFormat
+        }
+
+        let targetFPS = min(max(fps, range.minFrameRate), range.maxFrameRate)
+        let duration: CMTime
+        if range.maxFrameDuration.isValid && range.maxFrameDuration.seconds > 0 {
+            duration = range.maxFrameDuration
+        } else {
+            duration = CMTime(seconds: 1.0 / targetFPS, preferredTimescale: 600)
+        }
+
+        Logger.info("applyFormat: req \(width)x\(height)@\(fps) -> target \(targetFPS), duration \(duration.seconds), ranges \(format.videoSupportedFrameRateRanges.map { "\($0.minFrameRate)-\($0.maxFrameRate)" }.joined(separator: ","))", category: .capture)
+
+        let wasRunning = session.isRunning
+        if wasRunning {
+            session.stopRunning()
+        }
+
         try device.lockForConfiguration()
         device.activeFormat = format
-        device.activeVideoMinFrameDuration = duration
         device.activeVideoMaxFrameDuration = duration
+        device.activeVideoMinFrameDuration = duration
         device.unlockForConfiguration()
+
+        if wasRunning {
+            session.startRunning()
+        }
+    }
+
+    private static func supports(_ range: AVFrameRateRange, fps: Double) -> Bool {
+        fps >= range.minFrameRate - 0.01 && fps <= range.maxFrameRate + 0.01
     }
 
     deinit {
