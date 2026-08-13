@@ -81,6 +81,17 @@ struct MainView: View {
 
             Spacer()
 
+            #if DEBUG
+            Button {
+                viewModel.state.isDebugOverlayExpanded.toggle()
+            } label: {
+                Image(systemName: viewModel.state.isDebugOverlayExpanded ? "info.circle.fill" : "info.circle")
+                    .font(.system(size: 16))
+            }
+            .buttonStyle(.borderless)
+            .help("显示/隐藏调试信息")
+            #endif
+
             Button {
                 viewModel.screenshot()
             } label: {

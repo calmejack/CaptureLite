@@ -52,5 +52,8 @@ final class AppState {
 
     var recordingElapsed: TimeInterval = 0
 
+    var isDebugOverlayExpanded: Bool = true
+    var debugOverlayPosition: CGPoint?
+
     var errorMessage: String?
 }

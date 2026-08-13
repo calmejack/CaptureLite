@@ -14,15 +14,8 @@ struct PreviewView: View {
                 emptyState
             }
             #if DEBUG
-            if let renderer {
-                VStack {
-                    Spacer()
-                    HStack {
-                        DebugOverlayView(renderer: renderer)
-                        Spacer()
-                    }
-                }
-                .padding(8)
+            if let renderer, state.isDebugOverlayExpanded {
+                DebugOverlayView(state: state, renderer: renderer)
             }
             #endif
         }

@@ -18,6 +18,7 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
         var pixelFormat: String
         var droppedFrames: Int
         var renderTimeMS: Double
+        var latencyMS: Double
     }
 
     private let device: MTLDevice
@@ -39,6 +40,7 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
     private var _droppedFrames: Int = 0
     private var _pendingDrawn = false
     private var _lastRenderTimeMS: Double = 0
+    private var _latestFrameArrival: CFAbsoluteTime = 0
 
     var aspectMode: AspectMode {
         get { lock.lock(); defer { lock.unlock() }; return _aspectMode }
@@ -105,6 +107,7 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
         }
         _pendingDrawn = true
         _latestFrame = frame
+        _latestFrameArrival = CFAbsoluteTimeGetCurrent()
         _frameCount += 1
         lock.unlock()
     }
@@ -127,12 +130,14 @@ final class MetalRenderer: NSObject, VideoRenderer, MTKViewDelegate, @unchecked 
         }
         let frame = _latestFrame
         let pixelFormat = Self.pixelFormatName(frame?.pixelFormat)
+        let latencyMS = _latestFrameArrival > 0 ? (now - _latestFrameArrival) * 1000 : 0
         return RendererStats(
             fps: _fps,
             resolution: frame.map { "\($0.width) × \($0.height)" } ?? "—",
             pixelFormat: pixelFormat,
             droppedFrames: _droppedFrames,
-            renderTimeMS: _lastRenderTimeMS
+            renderTimeMS: _lastRenderTimeMS,
+            latencyMS: latencyMS
         )
     }
 
