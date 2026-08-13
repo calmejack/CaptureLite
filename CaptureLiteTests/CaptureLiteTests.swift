@@ -1,4 +1,5 @@
 import XCTest
+import AVFoundation
 @testable import CaptureLite
 
 final class CaptureLiteTests: XCTestCase {
@@ -195,5 +196,41 @@ final class MockVideoSourceTests: XCTestCase {
         try await source.start()
         source.stop()
         source.stop()
+    }
+}
+
+final class RecorderTests: XCTestCase {
+    func testRecordWithMockSourceProducesPlayableMP4() async throws {
+        let url = URL(fileURLWithPath: NSTemporaryDirectory() + "CaptureLite_test_\(UUID().uuidString).mp4")
+        let config = RecordingConfig(codec: .h264, width: 640, height: 480, fps: 30, bitrate: nil, outputURL: url)
+        let recorder = Recorder()
+
+        let source = MockVideoSource(width: 640, height: 480, fps: 30)
+        try await source.start()
+        defer { source.stop() }
+
+        try await recorder.start(config: config, audioSettings: nil)
+
+        let deadline = Date().addingTimeInterval(3)
+        var count = 0
+        while Date() < deadline, count < 30 {
+            if let frame = source.latestFrame {
+                await recorder.appendVideo(frame)
+                count += 1
+                try await Task.sleep(for: .milliseconds(33))
+            } else {
+                try await Task.sleep(for: .milliseconds(10))
+            }
+        }
+        XCTAssertGreaterThan(count, 0, "should have appended frames")
+
+        await recorder.stop()
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        let asset = AVURLAsset(url: url)
+        XCTAssertGreaterThan(asset.duration.seconds, 0, "recorded file should have a duration")
+        let hasVideoTrack = !asset.tracks(withMediaType: .video).isEmpty
+        XCTAssertTrue(hasVideoTrack, "recorded MP4 should contain a video track")
+        try? FileManager.default.removeItem(at: url)
     }
 }

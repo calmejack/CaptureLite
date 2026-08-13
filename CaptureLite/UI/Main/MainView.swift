@@ -2,7 +2,6 @@ import SwiftUI
 
 struct MainView: View {
     @State private var viewModel: MainViewModel
-    @State private var showSettings = false
     @State private var showVideoPopover = false
     @State private var showAudioPopover = false
 
@@ -12,8 +11,6 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            Divider()
             PreviewView(state: viewModel.state, renderer: viewModel.renderer)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             Divider()
@@ -42,27 +39,6 @@ struct MainView: View {
             get: { viewModel.state.errorMessage != nil },
             set: { if !$0 { viewModel.state.errorMessage = nil } }
         )
-    }
-
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text("CaptureLite")
-                .font(.headline)
-            Spacer()
-            if let format = viewModel.state.activeFormat {
-                Text(format.resolutionDescription + " · " + format.fpsDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Button {
-                showSettings.toggle()
-            } label: {
-                Image(systemName: "gearshape")
-            }
-            .buttonStyle(.borderless)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 
     private var controlBar: some View {

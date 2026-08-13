@@ -23,7 +23,18 @@ actor Recorder {
 
         let writer = try AVAssetWriter(outputURL: config.outputURL, fileType: .mp4)
 
-        let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: nil, sourceFormatHint: nil)
+        var formatHint: CMFormatDescription?
+        let codecType: CMVideoCodecType = config.codec == .h264 ? kCMVideoCodecType_H264 : kCMVideoCodecType_HEVC
+        CMVideoFormatDescriptionCreate(
+            allocator: kCFAllocatorDefault,
+            codecType: codecType,
+            width: Int32(config.width),
+            height: Int32(config.height),
+            extensions: nil,
+            formatDescriptionOut: &formatHint
+        )
+
+        let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: nil, sourceFormatHint: formatHint)
         videoInput.expectsMediaDataInRealTime = true
         guard writer.canAdd(videoInput) else {
             throw RecordingError.writerCreationFailed("无法添加视频输入")
