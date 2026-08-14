@@ -85,10 +85,10 @@ final class MainViewModel {
         environment.renderer?.aspectMode = mode
     }
 
-    func toggleMirror() {
-        state.mirror.toggle()
-        environment.settings.mirror = state.mirror
-        environment.renderer?.mirror = state.mirror
+    func setMirror(_ mirrored: Bool) {
+        state.mirror = mirrored
+        environment.settings.mirror = mirrored
+        environment.renderer?.mirror = mirrored
     }
 
     func setRotation(_ rotation: Rotation) {
@@ -97,9 +97,9 @@ final class MainViewModel {
         environment.renderer?.rotation = rotation
     }
 
-    func toggleMute() {
-        state.isMuted.toggle()
-        environment.audioEngine.setMuted(state.isMuted)
+    func setMuted(_ muted: Bool) {
+        state.isMuted = muted
+        environment.audioEngine.setMuted(muted)
     }
 
     func setResolution(_ resolution: Resolution) {

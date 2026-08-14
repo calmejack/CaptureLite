@@ -35,8 +35,8 @@ struct AudioDevicePopover: View {
             MeterBar(level: state.audioLevel)
 
             Toggle("静音", isOn: $state.isMuted)
-                .onChange(of: state.isMuted) { _, _ in
-                    viewModel.toggleMute()
+                .onChange(of: state.isMuted) { _, newValue in
+                    viewModel.setMuted(newValue)
                 }
         }
         .padding()

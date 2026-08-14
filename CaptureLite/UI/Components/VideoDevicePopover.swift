@@ -76,7 +76,7 @@ struct VideoDevicePopover: View {
 
             Toggle("镜像", isOn: $state.mirror)
                 .onChange(of: state.mirror) { _, newValue in
-                    viewModel.toggleMirror()
+                    viewModel.setMirror(newValue)
                 }
         }
         .padding()

@@ -27,7 +27,7 @@ struct MainView: View {
             Text(viewModel.state.errorMessage ?? "")
         }
         .background {
-            Button("") { viewModel.toggleMute() }
+            Button("") { viewModel.setMuted(!viewModel.state.isMuted) }
                 .keyboardShortcut("m", modifiers: [])
                 .opacity(0)
                 .frame(width: 0, height: 0)
